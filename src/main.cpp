@@ -7,7 +7,7 @@ int main() {
   std::ofstream outStream("output.txt");
 
   AutoFile af("autofile.txt");
-  std::vector<AutoFile::Opertation>& commands = af.readFile();
+  std::vector<AutoFile::Operation>& commands = af.readFile();
 
   for(unsigned int i = 0; i < commands.size(); i++) {
 		if(commands[i].second) {

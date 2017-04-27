@@ -8,6 +8,7 @@
 #include "fio/parser.h"
 #include <iostream>
 
+
 AutoFile::AutoFile(const char* file)
 : parser(inStream)
 {
@@ -19,6 +20,9 @@ AutoFile::AutoFile(const char* file)
 
 std::string AutoFile::readCummulativeSilky(bool redIncluded)
 {
+	std::stringstream command;
+	command << "SilkyDriveCmd{";
+	
 	std::vector<double> leftBlue;
 	std::vector<double> rightBlue;
 	std::vector<double> leftRed;
@@ -36,22 +40,56 @@ std::string AutoFile::readCummulativeSilky(bool redIncluded)
 			rightRedCount = parser.readVector(rightRed);
 
 			if(leftRedCount != 0 && leftRedCount == rightRedCount) {
-				return "SilkyDriveCmd(" + leftBlue + ", " + rightBlue + ", " + leftRed + ", " + rightRed + ")";
+				command << "std::vector<double> {";
+				command << leftBlue[0];
+				for(int i = 1; i < leftBlue.size(); i++) {
+					command << ", " << leftBlue[i];
+				}
+				command << "}, std::vector<double> {";
+				command << rightBlue[0];
+				for(int i = 1; i < rightBlue.size(); i++) {
+					command << ", " << rightBlue[i];
+				}
+				command << "}, std::vector<double> {";
+				command << leftRed[0];
+				for(int i = 1; i < leftRed.size(); i++) {
+					command << ", " << leftRed[i];
+				}
+				command << "}, std::vector<double> {";
+				command << rightRed[0];
+				for(int i = 1; i < rightRed.size(); i++) {
+					command << ", " << rightRed[i];
+				}
+				command << "})";
 			} else {
 				std::cout << "*** FAILED *** Not the same number of segments cummulative" << std::endl;
 				return NULL;
 			}
 		} else {
-				return "SilkyDriveCmd(" + leftBlue + ", " + rightBlue + ")";
+			command << "std::vector<double> {";
+			command << leftBlue[0];
+			for(int i = 1; i < leftBlue.size(); i++) {
+				command << ", " << leftBlue[i];
+			}
+			command << "}, std::vector<double> {";
+			command << rightBlue[0];
+			for(int i = 1; i < rightBlue.size(); i++) {
+				command << ", " << rightBlue[i];
+			}
+			command << "})";
 		}
 	} else {
 		std::cout << "*** FAILED *** Not the same number of segments cummulative" << std::endl;
 		return NULL;
 	}
+	
+	return command.str();
 }
 
 std::string AutoFile::readDifferentialSilky(bool redIncluded)
 {
+	std::stringstream command;
+	command << "SilkyDriveCmd{";
 	std::vector<double> leftBlue;
 	std::vector<double> rightBlue;
 	std::vector<double> leftRed;
@@ -74,13 +112,45 @@ std::string AutoFile::readDifferentialSilky(bool redIncluded)
 					leftRed[i] += leftRed[i-1];
 					rightRed[i] += rightRed[i-1];
 				}
-				return "SilkyDriveCmd(" + leftBlue + ", " + rightBlue + ", " + leftRed + ", " + rightRed + ")";
+				command << "std::vector<double> {";
+				command << leftBlue[0];
+				for(int i = 1; i < leftBlue.size(); i++) {
+					command << ", " << leftBlue[i];
+				}
+				command << "}, std::vector<double> {";
+				command << rightBlue[0];
+				for(int i = 1; i < rightBlue.size(); i++) {
+					command << ", " << rightBlue[i];
+				}
+				command << "}, std::vector<double> {";
+				command << leftRed[0];
+				for(int i = 1; i < leftRed.size(); i++) {
+					command << ", " << leftRed[i];
+				}
+				command << "}, std::vector<double> {";
+				command << rightRed[0];
+				for(int i = 1; i < rightRed.size(); i++) {
+					command << ", " << rightRed[i];
+				}
+				command << "})";
+				return command.str();
 			} else {
 				std::cout << "*** FAILED *** Not the same number of segments differential" << std::endl;
 				return NULL;
 			}
 		} else {
-			return "SilkyDriveCmd(" + leftBlue + ", " + rightBlue + ")";
+			command << "std::vector<double> {";
+			command << leftBlue[0];
+			for(int i = 1; i < leftBlue.size(); i++) {
+				command << ", " << leftBlue[i];
+			}
+			command << "}, std::vector<double> {";
+			command << rightBlue[0];
+			for(int i = 1; i < rightBlue.size(); i++) {
+				command << ", " << rightBlue[i];
+			}
+			command << "})";
+			return command.str();
 		}
 	} else {
 		std::cout << "*** FAILED *** Not the same number of segments differential" << std::endl;
@@ -89,16 +159,20 @@ std::string AutoFile::readDifferentialSilky(bool redIncluded)
 }
 
 std::string AutoFile::readWait() {
+	std::stringstream command;
+	command << "WaitCmd(";
 	std::vector<double> parameters;
 	if(parser.readVector(parameters) != 0) {
 		double time = parameters[0];
-		return new "WaitCommand(" + time + ")";
+		command << time << ")";
+		return command.str();
 	} else {
-		return NULL;
+		return "";
 	}
 }
 
 std::string AutoFile::readDriveStraight(bool redIncluded) {
+	std::stringstream command;
 	std::vector<double> parametersBlue;
 	std::vector<double> parametersRed;
 	double blueDistance;
@@ -114,9 +188,11 @@ std::string AutoFile::readDriveStraight(bool redIncluded) {
 		} else {
 			return NULL;
 		}
-		return "AHRSDriveStraightCmd(" + blueDistance + ", " + redDistance + ")";
+		command << "AHRSDriveStraightCmd(" << blueDistance << ", " << redDistance << ")";
+		return command.str();
 	} else {
-		return "AHRSDriveStraightCmd(" + blueDistance + ")";
+		command << "AHRSDriveStraightCmd(" << blueDistance << ")";
+		return command.str();
 	}
 }
 
@@ -129,25 +205,30 @@ std::string AutoFile::readSpinUp() {
 }
 
 std::string AutoFile::readGearFlaps(bool open) {
-	return "OpenGearFlapsCmd(" + open + ")";
+	std::stringstream command;
+
+	command << "OpenGearFlapsCmd(" << open << ")";
+	return command.str();
 }
 
 std::string AutoFile::readSilkyRotate() {
+	std::stringstream command;
 	std::vector<double> params;
 	if(parser.readVector(params) != 0) {
-		return "SilkyRotateCmd(" + params[0] + ")";
+		command << "SilkyRotateCmd(" << params[0] << ")";
 	} else {
-		return NULL;
+		command << __func__ << " Failed " << __LINE__;
 	}
+	return command.str();
 }
 
-std::vector<Opertation>& AutoFile::readFile(void)
+std::vector<AutoFile::Operation>& AutoFile::readFile(void)
 {
 	char cmd;
 	bool parallel;
 	while(!parser.readCommand(cmd, parallel)) {
 
-		std::string* cb = nullptr;
+		std::string cb;
 
 		switch(cmd) {
 			//Normal silky
@@ -201,7 +282,7 @@ std::vector<Opertation>& AutoFile::readFile(void)
 				std::cout << "unexpected command:" << cmd << std::endl;
 				break;
 		}
-		if(cb) {
+		if(cb[0] != '\0') {
 			commands.push_back(Operation(cb, parallel));
 		}
 	}

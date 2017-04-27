@@ -75,6 +75,8 @@ public:
 private:
 	std::ifstream inStream;
 	AutoFileParser parser;
+	std::vector<Operation> commands;
+
 	std::string readCummulativeSilky(bool redIncluded = false);
 	std::string readDifferentialSilky(bool redIncluded = false);
 	std::string readWait();
